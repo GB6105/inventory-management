@@ -23,4 +23,15 @@ public class StockService {
         // 갱신된 값 저장
 
     }
+
+    @Transactional
+    public void decreaseStockWithLock(Long id, Long quantity){
+        // Stock 조회 -> 비관적 락 적용
+        Stock stock = stockRepository.findByIdWithPessimisticLock(id).orElseThrow(
+                () -> new RuntimeException("Stock not found")
+        );
+        // 재고 감소
+        stock.decrease(quantity);
+        // 갱신된 값 저장
+    }
 }
