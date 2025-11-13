@@ -1,6 +1,7 @@
-package gb6105.inventory.service;
+package gb6105.inventory.lockTest.facade;
 
-import gb6105.inventory.repository.StockRepository;
+import gb6105.inventory.lockTest.repository.StockRepository;
+import gb6105.inventory.lockTest.service.StockService;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
@@ -15,9 +16,9 @@ public class StockFacade {
     private final RedissonClient redissonClient;
 
     public void decreaseStockWithRedis(Long id, Long quantity){
-        final RLock lock = redissonClient.getLock(String.format("stockId : %d", id));
-        long waitTime = 5l;
-        long leaseTime = 1;
+        RLock lock = redissonClient.getLock(String.format("stockId : %d", id));
+        long waitTime = 10; // 획득 대기 시간
+        long leaseTime = 1; // 대여 시간
         try{
             boolean available = lock.tryLock(waitTime,leaseTime, TimeUnit.SECONDS);
             if(!available){

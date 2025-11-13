@@ -2,8 +2,9 @@ package gb6105.inventory.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import gb6105.inventory.domain.Stock;
-import gb6105.inventory.repository.StockRepository;
+import gb6105.inventory.lockTest.domain.Stock;
+import gb6105.inventory.lockTest.repository.StockRepository;
+import gb6105.inventory.lockTest.service.StockService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

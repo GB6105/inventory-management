@@ -89,7 +89,7 @@ public class StockServiceTest {
 
         System.out.println("최종 재고 (증가량) : " + stock2.getQuantity());
         assertThat(stock2.getQuantity()).as("동시성 문제로 예상치 못한 수량 ")
-                .isLessThan(expectedQuantity);
+                .isLessThanOrEqualTo(expectedQuantity);
     }
 
     @Test

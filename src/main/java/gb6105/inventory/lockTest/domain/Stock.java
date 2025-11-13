@@ -1,4 +1,4 @@
-package gb6105.inventory.domain;
+package gb6105.inventory.lockTest.domain;
 
 
 import jakarta.persistence.Entity;

@@ -1,10 +1,8 @@
-package gb6105.inventory.service;
+package gb6105.inventory.lockTest.service;
 
-import gb6105.inventory.domain.Stock;
-import gb6105.inventory.repository.StockRepository;
-import java.util.concurrent.TimeUnit;
+import gb6105.inventory.lockTest.domain.Stock;
+import gb6105.inventory.lockTest.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

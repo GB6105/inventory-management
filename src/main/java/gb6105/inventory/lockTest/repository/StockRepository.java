@@ -1,6 +1,6 @@
-package gb6105.inventory.repository;
+package gb6105.inventory.lockTest.repository;
 
-import gb6105.inventory.domain.Stock;
+import gb6105.inventory.lockTest.domain.Stock;
 import jakarta.persistence.LockModeType;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

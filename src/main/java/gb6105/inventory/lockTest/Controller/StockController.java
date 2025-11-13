@@ -1,7 +1,7 @@
-package gb6105.inventory.Controller;
+package gb6105.inventory.lockTest.Controller;
 
-import gb6105.inventory.service.StockFacade;
-import gb6105.inventory.service.StockService;
+import gb6105.inventory.lockTest.facade.StockFacade;
+import gb6105.inventory.lockTest.service.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
