@@ -22,7 +22,7 @@ public class CouponController {
     public ResponseEntity<String> issueCoupon(@RequestBody CouponIssueRequest request) {
         try {
             // 1. Service 로직 직접 호출 (DB 락 획득, 검증, 발급, 커밋까지 동기적으로 처리)
-            couponService.issueCoupon(request.email(), request.couponId());
+            couponService.issueCouponWithPessimisticLock(request.email(), request.couponId());
 
             // 2. 성공 시 HTTP 200 OK 응답
             return ResponseEntity.ok()
