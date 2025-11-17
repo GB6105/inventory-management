@@ -13,9 +13,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class CouponServiceRedisson {
-    private final MemberRepository memberRepository;
-    private final CouponRepository couponRepository;
-    private final CouponIssueHistoryRepository historyRepository;
     private final CouponService couponService;
     private final RedissonClient redissonClient;
 
@@ -23,7 +20,7 @@ public class CouponServiceRedisson {
 
     public void issueCouponWithRedisson(String email, Long couponId){
         RLock lock = redissonClient.getLock(COUPON_LOCK_PREFIX + couponId);
-        long waitTime = 1l;
+        long waitTime = 3l;
         long leastTime = 1l;
         TimeUnit time = TimeUnit.SECONDS;
 

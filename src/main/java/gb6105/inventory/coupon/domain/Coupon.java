@@ -16,27 +16,27 @@ import lombok.NoArgsConstructor;
 public class Coupon {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "coupon_id")
-    private Long couponId;
+    @Column(name = "id")
+    private Long id;
 
     private String name;
 
-    private int total_quantity;
+    private int quantity;
 
     /**
-     * @param name
-     * @param total_quantity
+     * @param name 쿠폰 이름
+     * @param quantity 총 수량
      */
-    public Coupon(String name, int total_quantity) {
+    public Coupon(String name, int quantity) {
         this.name = name;
-        this.total_quantity = total_quantity;
+        this.quantity = quantity;
     }
 
     public void decreaseQuantity() {
-        if(this.total_quantity < 0) {
-            throw new RuntimeException("쿠폰이 모두 소진되었습니다.");
+        if(this.quantity <= 0) {
+            throw new IllegalStateException("쿠폰이 모두 소진되었습니다.");
         }
-        total_quantity--;
+        quantity--;
     }
 
 }

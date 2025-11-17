@@ -4,12 +4,10 @@ package gb6105.inventory.coupon.service;
 import gb6105.inventory.coupon.domain.Coupon;
 import gb6105.inventory.coupon.domain.CouponIssueHistory;
 import gb6105.inventory.coupon.domain.CouponIssueHistory.IssueStatus;
-import gb6105.inventory.coupon.domain.Member;
 import gb6105.inventory.coupon.repository.CouponRepository;
 import gb6105.inventory.coupon.repository.CouponIssueHistoryRepository;
 import gb6105.inventory.coupon.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,97 +19,65 @@ public class CouponService {
     private final CouponIssueHistoryRepository historyRepository;
 
     @Transactional
-    public void issueCoupon(String email, Long couponId) {
+    // lock을 사용하지 않은 DB 메서드 -> 동시성 이슈 발생 확인 용
+    public void issueCoupon(String email, Long id) {
 
         // 회원 정보 조회
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException(String.format("회원을 찾을 수 없습니다. %s", email)));
+        String memberEmail = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException(String.format("회원을 찾을 수 없습니다. %s", email)))
+                .getEmail();
 
-        // 락 없이 일반 조회
-        // Redisson 락이 이미 획득된 상태에서 실행됩니다.
-        Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new IllegalArgumentException(String.format("쿠폰 정보를 찾을 수 없습니다. ID: %d", couponId)));
+        // 쿠폰 정보 조회
+        Coupon coupon = couponRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(String.format("쿠폰 정보를 찾을 수 없습니다. ID: %d", id)));
+
+        Long couponId = coupon.getId();
 
         // 쿠폰 발급 이력 조회
-        long existCouponCount = historyRepository.countByMemberAndCouponAndStatus(member, coupon, IssueStatus.SUCCESS);
-        if (existCouponCount > 0) {
-            saveIssueResult(member, coupon, IssueStatus.FAIL);
-            throw new IllegalStateException("이미 쿠폰을 발급받았습니다.");
+        boolean isIssued = historyRepository.existsByMemberEmailAndCouponId(email,couponId);
+
+        if(isIssued){
+            System.out.println("이미 발급 받은 기록이 있습니다.");
+            throw new RuntimeException("이미 쿠폰을 발급 받았습니다.");
         }
 
-        // 재고 확인 및 감소
-        if (coupon.getTotal_quantity() > 0) {
-            // 쿠폰 수량 감소
-            coupon.decreaseQuantity();
-            // 발급 이력 저장
-            saveIssueResult(member, coupon, IssueStatus.SUCCESS);
-            System.out.println("쿠폰 발급 성공" + member.getMemberId());
-        } else {
-            saveIssueResult(member, coupon, IssueStatus.FAIL);
-            System.out.println("쿠폰 발급 실패");
-            throw new IllegalArgumentException("쿠폰 재고가 소진되었습니다.");
-        }
+        // 쿠폰 수량 감소
+        coupon.decreaseQuantity();
+        // 발급 이력 저장
+        saveIssueResult(memberEmail, couponId, IssueStatus.SUCCESS.getMessage());
+        System.out.println("쿠폰 발급 성공 " + memberEmail);
     }
 
     @Transactional
-    public void issueCouponWithPessimisticLock(String email, Long couponId) {
+    public void issueCouponWithPessimisticLock(String email, Long id) {
         // 회원 정보 조회
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException(String.format("회원을 찾을 수 없습니다. %s", email)));
+        String memberEmail = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException(String.format("회원을 찾을 수 없습니다. %s", email)))
+                .getEmail();
 
         // 비관적 락을 사용
-        Coupon coupon = couponRepository.findByIdWithPessimisticLock(couponId)
+        Coupon coupon = couponRepository.findByIdWithPessimisticLock(id)
                 .orElseThrow(() -> new IllegalArgumentException("쿠폰 정보를 찾을수 없습니다."));
 
+        Long couponId = coupon.getId();
+
         // 쿠폰 발급 이력 조회
-        long existCouponCount = historyRepository.countByMemberAndCouponAndStatus(member, coupon, IssueStatus.SUCCESS);
+        boolean isIssued = historyRepository.existsByMemberEmailAndCouponId(email,couponId);
 
-        if (existCouponCount > 0) {
-            throw new IllegalArgumentException("이미 쿠폰을 발급받았습니다.");
+        if(isIssued){
+            throw new IllegalStateException("이미 쿠폰을 발급 받았습니다.");
         }
 
-        // 재고 확인 및 감소
-        if (coupon.getTotal_quantity() > 0) {
-            // 쿠폰 수량 감소
-            coupon.decreaseQuantity();
-            // 발급 이력 저장
-            saveIssueResult(member, coupon, IssueStatus.SUCCESS);
-            System.out.println("쿠폰 발급 성공" + member.getMemberId());
-        } else {
-            saveIssueResult(member, coupon, IssueStatus.FAIL);
-            System.out.println("쿠폰 발급 실패");
-            throw new IllegalArgumentException("쿠폰 재고가 소진되었습니다.");
-        }
-
+        // 쿠폰 수량 감소
+        coupon.decreaseQuantity();
+        // 발급 이력 저장
+        saveIssueResult(memberEmail, couponId, IssueStatus.SUCCESS.getMessage());
+        System.out.println("쿠폰 발급 성공 " + memberEmail);
     }
 
-    // ⭐ 외부(Worker)에서 호출할 DB 성공 기록 트랜잭션 메서드 추가
-    @Transactional
-    public void saveSuccessIssue(String email, Long couponId) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException(String.format("회원을 찾을 수 없습니다. %s", email)));
-
-        Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new IllegalArgumentException(String.format("쿠폰 정보를 찾을 수 없습니다. ID: %d", couponId)));
-
-
-        saveIssueResult(member, coupon, IssueStatus.SUCCESS);
-    }
-
-    @Transactional
-    public void saveFailIssue(String email, Long couponId, String reason) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException(String.format("회원을 찾을 수 없습니다. %s", email)));
-
-        Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new IllegalArgumentException(String.format("쿠폰 정보를 찾을 수 없습니다. ID: %d", couponId)));
-
-        saveIssueResult(member, coupon, IssueStatus.FAIL);
-    }
-
-    private void saveIssueResult(Member member, Coupon coupon, CouponIssueHistory.IssueStatus status) {
-        CouponIssueHistory history = new CouponIssueHistory(member, coupon, status);
-        historyRepository.save(history);
+    public void saveIssueResult(String memberId, Long couponId, String status) {
+        CouponIssueHistory history = new CouponIssueHistory(memberId, couponId, status);
+        historyRepository.saveAndFlush(history);
     }
 
 }

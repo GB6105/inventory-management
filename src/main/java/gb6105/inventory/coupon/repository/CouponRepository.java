@@ -12,6 +12,6 @@ import org.springframework.stereotype.Repository;
 public interface CouponRepository extends JpaRepository<Coupon, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select c from Coupon c where c.couponId = :couponId")
+    @Query("select c from Coupon c where c.id = :couponId")
     Optional<Coupon> findByIdWithPessimisticLock(Long couponId);
 }

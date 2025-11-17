@@ -1,5 +1,6 @@
 package gb6105.inventory.coupon.service;
 
+import gb6105.inventory.coupon.domain.CouponIssueHistory.IssueStatus;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +37,7 @@ public class CouponServiceRedis {
         }
     }
 
-    // ⭐ 큐 모니터링: 별도의 스레드/태스크로 실행되어야 함.
-    // 여기서는 개념적으로만 표현하며, 실제 구현은 TaskExecutor를 사용합니다.
+    // 큐 모니터링: 별도의 스레드/태스크로 실행되어야 함.
     public void processCouponQueue() {
         while (true) {
             try {
@@ -58,7 +58,7 @@ public class CouponServiceRedis {
         }
     }
 
-    // ⭐ 순서대로 처리되는 핵심 로직 (락 필요 없음: DECR이 원자적)
+    // 순서대로 처리되는 핵심 로직 (락 필요 없음: DECR이 원자적)
     private void issueCouponSequentially(String email, Long couponId) {
 
         String lockName = COUPON_LOCK_PREFIX + couponId;
@@ -68,13 +68,13 @@ public class CouponServiceRedis {
         TimeUnit time = TimeUnit.SECONDS;
 
         try {
-            // ⭐ 1. 락 획득 시도 (Redisson Lock)
+            // 1. 락 획득 시도 (Redisson Lock)
             boolean isLocked = lock.tryLock(waitTime, leastTime, time);
 
             if (!isLocked) {
                 // 락 획득 실패 (동시에 여러 워커가 실행되거나, 이전 락이 만료 안됐을 때)
-                couponService.saveFailIssue(email, couponId, "락 획득 실패");
-                System.out.println("❌ 락 획득 실패: " + email);
+                couponService.saveIssueResult(email, couponId, IssueStatus.FAIL.getMessage());
+                System.out.println("락 획득 실패: " + email);
                 return;
             }
 
@@ -85,12 +85,13 @@ public class CouponServiceRedis {
 
         } catch (IllegalStateException | IllegalArgumentException e) {
             // DB 로직에서 발생한 오류 (재고 소진, 중복 발급)는 이미 DB에 FAIL 기록됨
-            System.out.println("❌ 처리 실패: " + e.getMessage());
+            System.out.println("처리 실패: " + e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+
             // 인터럽트 발생 시 실패 기록 (선택적)
-            couponService.saveFailIssue(email, couponId, "인터럽트 발생");
-            System.err.println("❌ 락 획득 중 인터럽트");
+            couponService.saveIssueResult(email, couponId, IssueStatus.FAIL.getMessage());
+            System.out.println("락 획득 중 인터럽트");
         } finally {
             // 3. 락 해제 (필수)
             if (lock.isHeldByCurrentThread()) {

@@ -16,14 +16,14 @@ import lombok.NoArgsConstructor;
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "member_id")
-    private Long memberId;
+    @Column(name = "id")
+    private Long id;
 
     @Column(name = "email", nullable = false)
     private String email;
 
     /**
-     * @param email
+     * @param email 이메일
      */
     public Member(String email) {
         this.email = email;

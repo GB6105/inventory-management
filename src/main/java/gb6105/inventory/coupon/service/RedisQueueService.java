@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class CouponQueueService {
+public class RedisQueueService {
     private final RedisTemplate<String, String> redisTemplate;
     private static final String COUPON_ISSUE_QUEUE_KEY = "coupon:issue:queue";
 
