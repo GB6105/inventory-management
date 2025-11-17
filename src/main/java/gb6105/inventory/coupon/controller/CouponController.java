@@ -4,6 +4,7 @@ import gb6105.inventory.coupon.dto.CouponIssueRequest;
 import gb6105.inventory.coupon.service.RedisQueueService;
 import gb6105.inventory.coupon.service.CouponService;
 import gb6105.inventory.coupon.service.CouponServiceRedisson;
+import gb6105.inventory.coupon.service.CouponServiceRedis;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CouponController {
     private final CouponService couponService;
     private final CouponServiceRedisson couponServiceRedisson;
+    private final CouponServiceRedis couponServiceRedis;
     private final RedisQueueService couponQueueService;
 
     @PostMapping("/issue")
@@ -98,8 +100,33 @@ public class CouponController {
     }
 
     @PostMapping("/issue/redis")
+    public ResponseEntity<String> issueCouponWithRedis(@RequestBody CouponIssueRequest request) {
+        try {
+            // Redisson 분산락을 적용한 쿠폰 발급 로직 호출
+            couponServiceRedis.issueCouponWithRedis(request.email(), request.couponId());
+
+            return ResponseEntity.ok()
+                    .body("{\"message\": \"쿠폰 발급에 성공했습니다.\"}");
+
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("{\"error\": \"" + e.getMessage() + "\"}");
+
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"error\": \"" + e.getMessage() + "\"}");
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"서버 오류가 발생했습니다.\"}");
+        }
+    }
+
+    @PostMapping("/issue/queue")
     // Redis Queue를 이용한 요청 순서 보장
-    public ResponseEntity<String> issueCouponRedis(@RequestBody CouponIssueRequest request) {
+    public ResponseEntity<String> issueCouponWithRedisQueue(@RequestBody CouponIssueRequest request) {
 
         try {
             // 요청을 Redis Queue에 넣고 즉시 반환

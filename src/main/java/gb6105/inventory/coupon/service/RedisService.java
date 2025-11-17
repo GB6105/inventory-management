@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class RedisStockService {
+public class RedisService {
     private final RedisTemplate<String, String> redisTemplate;
     private static final String COUNPON_STOCK_PREFIX = "coupon:stock:";
 

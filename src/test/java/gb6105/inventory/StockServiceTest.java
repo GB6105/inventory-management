@@ -161,4 +161,8 @@ public class StockServiceTest {
         System.out.println("AtomicInteger 도입 시 실행 시간 " + duration + "m/sec" );
         assertThat(stockLock.getQuantity()).isEqualTo(expectedQuantity);
     }
+
+    public void test1(){
+
+    }
 }

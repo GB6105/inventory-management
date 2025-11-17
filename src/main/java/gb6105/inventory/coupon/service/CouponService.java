@@ -75,6 +75,28 @@ public class CouponService {
         System.out.println("쿠폰 발급 성공 " + memberEmail);
     }
 
+    @Transactional
+    //
+    public void issueCouponCore(String email, Long id) {
+
+        // 회원 정보 조회
+        String memberEmail = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException(String.format("회원을 찾을 수 없습니다. %s", email)))
+                .getEmail();
+
+        // 쿠폰 정보 조회
+        Coupon coupon = couponRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(String.format("쿠폰 정보를 찾을 수 없습니다. ID: %d", id)));
+
+        Long couponId = coupon.getId();
+
+        // 쿠폰 수량 감소
+        coupon.decreaseQuantity();
+        // 발급 이력 저장
+        saveIssueResult(memberEmail, couponId, IssueStatus.SUCCESS.getMessage());
+        System.out.println("쿠폰 발급 성공 " + memberEmail);
+    }
+
     public void saveIssueResult(String memberId, Long couponId, String status) {
         CouponIssueHistory history = new CouponIssueHistory(memberId, couponId, status);
         historyRepository.saveAndFlush(history);

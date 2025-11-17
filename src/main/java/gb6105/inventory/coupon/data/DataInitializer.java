@@ -4,7 +4,7 @@ import gb6105.inventory.coupon.domain.Coupon;
 import gb6105.inventory.coupon.domain.Member;
 import gb6105.inventory.coupon.repository.CouponRepository;
 import gb6105.inventory.coupon.repository.MemberRepository;
-import gb6105.inventory.coupon.service.RedisStockService;
+import gb6105.inventory.coupon.service.RedisService;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -13,12 +13,12 @@ import org.springframework.stereotype.Component;
 public class DataInitializer {
     private final MemberRepository memberRepository;
     private final CouponRepository couponRepository;
-    private final RedisStockService redisStockService;
+    private final RedisService redisService;
 
-    public DataInitializer(MemberRepository memberRepository, CouponRepository couponRepository , RedisStockService redisStockService) {
+    public DataInitializer(MemberRepository memberRepository, CouponRepository couponRepository , RedisService redisService) {
         this.memberRepository = memberRepository;
         this.couponRepository = couponRepository;
-        this.redisStockService = redisStockService;
+        this.redisService = redisService;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -27,7 +27,7 @@ public class DataInitializer {
             couponRepository.save(new Coupon("coffee",10));
         }
 
-        redisStockService.initializeStock(1L,10);
+        redisService.initializeStock(1L,10);
 
         if (memberRepository.count() == 0) { // 데이터가 없을 때만 실행
             for (int i = 1; i <= 100; i++) {
