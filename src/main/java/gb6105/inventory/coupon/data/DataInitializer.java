@@ -24,7 +24,13 @@ public class DataInitializer {
     @EventListener(ApplicationReadyEvent.class)
     public void initData() {
         if(couponRepository.findById(1L).isEmpty()){
-            couponRepository.save(new Coupon("coffee",10));
+            couponRepository.save(new Coupon("starbugs",10));
+        }
+        if(couponRepository.findById(2L).isEmpty()){
+            couponRepository.save(new Coupon("twothumb",10));
+        }
+        if(couponRepository.findById(3L).isEmpty()){
+            couponRepository.save(new Coupon("megabytecoffee",10));
         }
 
         redisService.initializeStock(1L,10);

@@ -1,7 +1,8 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/inventory?serverTimezone=Asia/Seoul&characterEncoding=UTF8
+#    url: jdbc:mysql://localhost:3306/inventory?serverTimezone=Asia/Seoul&characterEncoding=UTF8
+    url: jdbc:mysql://mysql:3306/inventory?serverTimezone=Asia/Seoul&characterEncoding=UTF8
     username: root
     password: my1234
   jpa:
@@ -15,3 +16,4 @@ spring:
     redis:
       port: 6379
       host: localhost
+      password: r1234
