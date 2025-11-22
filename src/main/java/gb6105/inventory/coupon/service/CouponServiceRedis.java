@@ -17,6 +17,7 @@ public class CouponServiceRedis {
     // DB 트랜잭션 및 발급 로직을 가진 서비스
     private final CouponService couponService;
     private final RedissonClient redissonClient;
+    private final RedisService redisService;
 
     private static final String ISSUED_MEMBER_SET_PREFIX = "coupon:issued:";
     private static final String COUPON_LOCK_PREFIX = "lock:coupon";
@@ -27,8 +28,8 @@ public class CouponServiceRedis {
         RSet<String> issuedMembers = redissonClient.getSet(key);
 
         if(issuedMembers.contains(email)) {
-            System.out.println("이미 쿠폰을 발급 받았습니다.");
-            throw new IllegalStateException("이미 쿠폰을 발급 받았습니다.");
+//            System.out.println("이미 쿠폰을 발급 받았습니다.");
+            throw new IllegalStateException("이미 쿠폰을 발급 받았습니다." + email );
         }
         // 순수 쿠폰 발급 로직 호출
 
@@ -43,6 +44,7 @@ public class CouponServiceRedis {
                 throw new IllegalStateException("락 획득 실패 : 서버 혼잡");
             }
             couponService.issueCouponCore(email, couponId);
+            redisService.decreaseStock(couponId);
 
         }catch(InterruptedException e){
             throw new RuntimeException(e);

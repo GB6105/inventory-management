@@ -34,6 +34,8 @@ public class DataInitializer {
         }
 
         redisService.initializeStock(1L,10);
+        redisService.initializeStock(2L,10);
+        redisService.initializeStock(3L,10);
 
         if (memberRepository.count() == 0) { // 데이터가 없을 때만 실행
             for (int i = 1; i <= 100; i++) {
