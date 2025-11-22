@@ -1,8 +1,5 @@
 package gb6105.inventory.coupon.service;
 
-import gb6105.inventory.coupon.repository.CouponIssueHistoryRepository;
-import gb6105.inventory.coupon.repository.CouponRepository;
-import gb6105.inventory.coupon.repository.MemberRepository;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
